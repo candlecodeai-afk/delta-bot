@@ -15,7 +15,23 @@ from delta_bot_ethusd import state, start_bot_thread
 log = logging.getLogger(__name__)
 
 app = Flask(__name__)
+app = Flask(__name__)
 
+# Auto-start bot on Gunicorn startup
+if not getattr(app, "_bot_started", False):
+    app._bot_started = True
+
+    with state.lock:
+        state.running = True
+        state.bot_status = "Starting"
+
+    threading.Thread(
+        target=start_bot_thread,
+        daemon=True,
+        name="BotThread"
+    ).start()
+
+    log.info("===== BOT AUTO STARTED =====")
 ﻿# =============================================================================
 # delta_bot_ethusd.py
 # ETHUSD Volume Delta Trading Bot — Full Bot Logic
